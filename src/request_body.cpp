@@ -11,30 +11,8 @@
 using namespace std;
 
 
-PostValue::PostValue() : file(false), value("") {}
-
-PostValue::PostValue(bool file, std::string value) : file(file), value(value) {}
-
-void PostValue::setFile(bool file) {
-    this->file = file;
-}
-
-void PostValue::setValue(std::string value) {
-    this->value = value;
-}
-
-bool PostValue::getFile() {
-    return file;
-}
-
-string PostValue::getValue() {
-    return value;
-}
-
-PostValue::~PostValue() {}
-
-unordered_map<string, PostValue> multipart_formData(string requestBody, string boundary) {
-    unordered_map<string, PostValue> variables;
+tuple<unordered_map<string, string>, unordered_map<string, string>> multipart_formData(string requestBody, string boundary) {
+    tuple<unordered_map<string, string>, unordered_map<string, string>> variablesAndFiles;
 
     string line;
     stringstream requestBodyStringStream(requestBody);
@@ -58,12 +36,9 @@ unordered_map<string, PostValue> multipart_formData(string requestBody, string b
             name = name.substr(1, name.length() - 2);
 
             // Check if variable or file
-            PostValue postValue;
             streampos lastPosition;
             if (!contentDispositionStringStream.eof()) {
                 // Extract filename
-                postValue.setFile(true);
-
                 string filename;
                 getline(contentDispositionStringStream, filename, ';');
                 stringstream filenameStringStream(trim(filename));
@@ -71,7 +46,7 @@ unordered_map<string, PostValue> multipart_formData(string requestBody, string b
                 getline(filenameStringStream, filename);
                 filename = trim(filename);
                 filename = filename.substr(1, filename.length() - 2);
-                postValue.setValue(filename);
+                get<1>(variablesAndFiles)[name] = filename;
 
                 while (line.compare("") != 0) {
                     getline(requestBodyStringStream, line);
@@ -98,19 +73,20 @@ unordered_map<string, PostValue> multipart_formData(string requestBody, string b
                 file.close();
             }
             else {
-                // Store variable
+                // Extract variable
                 while (line.compare("") != 0) {
                     getline(requestBodyStringStream, line);
                     line = trim(line);
                 }
 
+                string variable;
                 string nextLine;
                 getline(requestBodyStringStream, line);
                 lastPosition = requestBodyStringStream.tellg();
                 getline(requestBodyStringStream, nextLine);
                 while (nextLine.substr(0, boundary.length()).compare(boundary) != 0) {
                     line.push_back('\n');
-                    postValue.setValue(postValue.getValue() + line);
+                    variable += line;
 
                     lastPosition = requestBodyStringStream.tellg();
                     line = nextLine;
@@ -118,11 +94,11 @@ unordered_map<string, PostValue> multipart_formData(string requestBody, string b
                 }
 
                 if (line.back() == '\r') line.pop_back();
-                postValue.setValue(postValue.getValue() + line);
+                variable += line;
+                get<0>(variablesAndFiles)[name] = variable;
             }
 
             requestBodyStringStream.seekg(lastPosition);
-            variables[name] = postValue;
         }
         else if (line.compare(boundary + "--") == 0) {
             // End boundary
@@ -130,5 +106,5 @@ unordered_map<string, PostValue> multipart_formData(string requestBody, string b
         }
     }
 
-    return variables;
+    return variablesAndFiles;
 }
