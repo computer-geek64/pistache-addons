@@ -8,6 +8,6 @@
 #include <unordered_map>
 
 
-std::tuple<std::unordered_map<std::string, std::string>, std::unordered_map<std::string, std::string>> multipart_formData(std::string requestBody, std::string boundary);
+std::tuple<std::unordered_map<std::string, std::string>, std::unordered_map<std::string, std::string>> multipart_formData(const std::string &requestBody, const std::string &boundary);
 
 #endif
