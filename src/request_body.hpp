@@ -8,6 +8,12 @@
 #include <unordered_map>
 
 
-std::tuple<std::unordered_map<std::string, std::string>, std::unordered_map<std::string, std::string>> multipart_formData(const std::string &requestBody, const std::string &boundary);
+namespace PistacheAddons {
+    namespace RequestBody {
+        int parseMultipartFormData(const std::string &requestBody, const std::string &boundary, std::unordered_map <std::string, std::string> &variables, std::unordered_map <std::string, std::string> &files);
+
+        int parseApplicationFormUrlencoded(const std::string &requestBody, std::unordered_map<std::string, std::string> &variables);
+    }
+}
 
 #endif

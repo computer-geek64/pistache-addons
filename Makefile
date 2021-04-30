@@ -8,14 +8,17 @@ CC=g++
 
 all: libpistache_addons.so
 
-libpistache_addons.so: request_body.o
+libpistache_addons.so: request_body.o string_util.o
 	$(CC) $^ -shared -o $@
 
-request_body.o: src/request_body.cpp src/request_body.hpp src/endpoint_util.hpp
+request_body.o: src/request_body.cpp src/request_body.hpp src/string_util.hpp
+	$(CC) -c $< -fPIC -o $@
+
+string_util.o: src/string_util.cpp src/string_util.hpp
 	$(CC) -c $< -fPIC -o $@
 
 clean:
-	@rm -rvf libpistache_addons.so request_body.o
+	@rm -rvf libpistache_addons.so request_body.o string_util.o
 
 install: libpistache_addons.so
 	mkdir /usr/local/include/pistache_addons/
